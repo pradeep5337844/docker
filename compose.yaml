@@ -1,0 +1,52 @@
+services:
+  opensearch-node:
+    container_name: opensearch-node
+    image: opensearchproject/opensearch:latest
+    volumes:
+      - opensearch_volume:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    environment:
+      - cluster.name=opensearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"     
+    restart: always
+    networks:
+      - opensearch-network    
+  opensearch-dashboards:
+    container_name: opensearch-dashboards
+    image: opensearchproject/opensearch-dashboards:latest
+    ports:
+      - 5601:5601
+    environment:
+      - OPENSEARCH_HOSTS=https://opensearch-node:9200
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=admin
+    restart: always
+    networks:
+      - opensearch-network
+    depends_on:
+      - opensearch-node
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - 5432:5432
+    networks:
+      - opensearch-network
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data            
+
+networks:
+  opensearch-network:
+    driver: bridge  
+
+volumes:
+    opensearch_volume:
+    postgres_volume:
